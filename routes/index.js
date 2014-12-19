@@ -121,8 +121,6 @@ module.exports = function(app) {
       res.redirect('/');//发表成功跳转到主页
     });
   });
-  app.get('/logout', function (req, res) {
-  });
 
   app.get('/logout', checkLogin);
   app.get('/logout', function (req, res) {
