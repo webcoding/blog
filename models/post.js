@@ -1,9 +1,10 @@
 var mongodb = require('./db'),
     markdown = require('markdown').markdown;
 
-function Post(name, title, post) {
+function Post(name, title, tags, post) {
   this.name = name;
   this.title = title;
+  this.tags = tags;
   this.post = post;
 }
 
@@ -26,6 +27,7 @@ Post.prototype.save = function(callback) {
       name: this.name,
       time: time,
       title: this.title,
+      tags: this.tags,
       post: this.post,
       comments: []
   };
@@ -123,6 +125,9 @@ Post.getByPage = function(name, page, callback) {
           }
           //解析 markdown 为 html
           docs.forEach(function (doc) {
+            if(!doc.tags){
+              doc.tags = [];
+            }
             doc.post = markdown.toHTML(doc.post);
           });  
           callback(null, docs, total);
@@ -174,38 +179,6 @@ Post.getOne = function(name, day, title, callback) {
   });
 };
 
-//返回所有文章存档信息
-Post.getArchive = function(callback) {
-  //打开数据库
-  mongodb.open(function (err, db) {
-    if (err) {
-      return callback(err);
-    }
-    //读取 posts 集合
-    db.collection('posts', function (err, collection) {
-      if (err) {
-        mongodb.close();
-        return callback(err);
-      }
-      //返回只包含 name、time、title 属性的文档组成的存档数组
-      collection.find({}, {
-        "name": 1,
-        "time": 1,
-        "title": 1
-      }).sort({
-        time: -1
-      }).toArray(function (err, docs) {
-        mongodb.close();
-        if (err) {
-          return callback(err);
-        }
-        callback(null, docs);
-      });
-    });
-  });
-};
-
-
 //返回原始发表的内容（markdown 格式）
 Post.edit = function(name, day, title, callback) {
   //打开数据库
@@ -234,7 +207,6 @@ Post.edit = function(name, day, title, callback) {
     });
   });
 };
-
 
 //更新一篇文章及其相关信息
 Post.update = function(name, day, title, post, callback) {
@@ -268,6 +240,38 @@ Post.update = function(name, day, title, post, callback) {
 };
 
 
+
+//返回所有文章存档信息
+Post.getArchive = function(callback) {
+  //打开数据库
+  mongodb.open(function (err, db) {
+    if (err) {
+      return callback(err);
+    }
+    //读取 posts 集合
+    db.collection('posts', function (err, collection) {
+      if (err) {
+        mongodb.close();
+        return callback(err);
+      }
+      //返回只包含 name、time、title 属性的文档组成的存档数组
+      collection.find({}, {
+        "name": 1,
+        "time": 1,
+        "title": 1
+      }).sort({
+        time: -1
+      }).toArray(function (err, docs) {
+        mongodb.close();
+        if (err) {
+          return callback(err);
+        }
+        callback(null, docs);
+      });
+    });
+  });
+};
+
 //删除一篇文章
 Post.remove = function(name, day, title, callback) {
   //打开数据库
@@ -294,6 +298,63 @@ Post.remove = function(name, day, title, callback) {
           return callback(err);
         }
         callback(null);
+      });
+    });
+  });
+};
+
+
+
+//返回所有标签
+Post.getTags = function(callback) {
+  mongodb.open(function (err, db) {
+    if (err) {
+      return callback(err);
+    }
+    db.collection('posts', function (err, collection) {
+      if (err) {
+        mongodb.close();
+        return callback(err);
+      }
+      //distinct 用来找出给定键的所有不同值
+      collection.distinct("tags", function (err, docs) {
+        mongodb.close();
+        if (err) {
+          return callback(err);
+        }
+        callback(null, docs);
+      });
+    });
+  });
+};
+
+//返回含有特定标签的所有文章
+Post.getTag = function(tag, callback) {
+  mongodb.open(function (err, db) {
+    if (err) {
+      return callback(err);
+    }
+    db.collection('posts', function (err, collection) {
+      if (err) {
+        mongodb.close();
+        return callback(err);
+      }
+      //查询所有 tags 数组内包含 tag 的文档
+      //并返回只含有 name、time、title 组成的数组
+      collection.find({
+        "tags": tag
+      }, {
+        "name": 1,
+        "time": 1,
+        "title": 1
+      }).sort({
+        time: -1
+      }).toArray(function (err, docs) {
+        mongodb.close();
+        if (err) {
+          return callback(err);
+        }
+        callback(null, docs);
       });
     });
   });
