@@ -120,21 +120,12 @@ Post.dealData = function(name, callback) {
       if (name) {
         query.name = name;
       }
-
-      // collection.update(query,{
-      //   $set: {
-      //     "pv": doc.pv || 0,
-      //     "tags": doc.tags || [],
-      //     "comments": doc.comments || []
-      //   }
-      // },false,true);
-
       //根据 query 对象查询文章
       collection.find(query).sort({
         time: -1
       }).toArray(function (err, docs) {
-        mongodb.close();
         if (err) {
+          mongodb.close();
           return callback(err);//失败！返回 err
         }
 
@@ -144,25 +135,22 @@ Post.dealData = function(name, callback) {
           doc.post = markdown.toHTML(doc.post);
 
           //TODO:更新默认值到数据库里
-          //if( (doc.tags === undefined) || (doc.comments=== undefined) || (doc.pv === undefined) ){
-            // collection.update({
-            //   "_id": doc._id
-            // }, {
-            //   $set: {
-            //     "pv": doc.pv || 0,
-            //     "tags": doc.tags || [],
-            //     "comments": doc.comments || []
-            //   }
-            // }, function (err) {
-            //   mongodb.close();
-            //   if (err) {
-            //     return callback(err);
-            //   }
-            // });
-          //}
+          //这里功能其效果了，但是页面会报错，数据库已经被修改达到目的
+          collection.update(query, {
+            $set: {
+              "pv": doc.pv || 0,
+              "tags": doc.tags || [],
+              "comments": doc.comments || []
+            }
+          }, function (err) {
+            mongodb.close();
+            if (err) {
+              return callback(err);
+            }
+          });
         });
-        updateDocs.push(doc);
         
+        updateDocs.push(doc);
         
         callback(null, updateDocs);//成功！以数组形式返回查询的结果
       });
