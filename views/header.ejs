@@ -10,7 +10,6 @@
 <header>
 <h1><%= title %></h1>
 </header>
-
 <nav>
 <span><a title="主页" href="/">home</a></span>
 <% if (user) { %>
@@ -24,6 +23,7 @@
   <span><a title="登录" href="/login">login</a></span>
   <span><a title="注册" href="/reg">register</a></span>
 <% } %>
+<span><form action="/search" method="GET"><input type="text" name="keyword" placeholder="SEARCH" class="search" /></form></span>
 </nav>
 
 <article>
