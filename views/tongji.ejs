@@ -1,1 +1,5 @@
-<p class="info">阅读：<%= post.pv || 0 %> | 评论：<%= post.comments && post.comments.length || 0 %></p>
+<p class="info">
+  阅读：<%= post.pv || 0 %>
+   | 评论：<%= post.comments && post.comments.length || 0 %>
+   | 转载：<%var reprint_to = post.reprint_info.reprint_to;%><%= reprint_to && reprint_to.length || 0 %>
+</p>
