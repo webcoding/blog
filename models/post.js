@@ -4,7 +4,7 @@ var mongodb = require('./db'),
 function Post(name, head, title, tags, post) {
   this.name = name;
   this.head = head;
-  this.title = title;
+  this.title = title.trim();
   this.tags = tags;
   this.post = post;
 }

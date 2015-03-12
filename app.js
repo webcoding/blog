@@ -15,6 +15,10 @@ var settings = require('./settings');
 var flash = require('connect-flash');
 //var users = require('./routes/users');
 
+var fs = require('fs');
+var accessLog = fs.createWriteStream('access.log', {flags: 'a'});
+var errorLog = fs.createWriteStream('error.log', {flags: 'a'});
+
 var app = express();
 
 // view engine setup
@@ -32,6 +36,8 @@ app.use(multer({
 // uncomment after placing your favicon in /public
 //app.use(favicon(__dirname + '/public/favicon.ico'));
 app.use(logger('dev'));
+app.use(logger({stream: accessLog}));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -50,14 +56,19 @@ app.use(flash());
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-
 routes(app);
 // app.use('/', routes);
 // app.use('/users', users);
 
+app.use(function (err, req, res, next) {
+  var meta = '[' + new Date() + '] ' + req.url + '\n';
+  errorLog.write(meta + err.stack + '\n');
+  next();
+});
 
 
-// catch 404 and forward to error handler
+
+//catch 404 and forward to error handler
 app.use(function(req, res, next) {
     var err = new Error('Not Found');
     err.status = 404;
