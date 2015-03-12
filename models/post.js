@@ -457,7 +457,6 @@ Post.getTag = function(tag, callback) {
   });
 };
 
-
 //返回通过标题关键字查询的所有文章信息
 Post.search = function(keyword, callback) {
   mongodb.open(function (err, db) {
