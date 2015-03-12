@@ -29,7 +29,8 @@ Post.prototype.save = function(callback) {
       title: this.title,
       tags: this.tags,
       post: this.post,
-      comments: []
+      comments: [],
+      pv: 0
   };
   //打开数据库
   mongodb.open(function (err, db) {
@@ -93,6 +94,83 @@ Post.getAll = function(name, callback) {
   });
 };
 
+//由于开发迭代的原因，新增的字段在老数据里没有默认值
+Post.dealData = function(name, callback) {
+  //打开数据库
+  mongodb.open(function (err, db) {
+    if (err) {
+      return callback(err);
+    }
+
+    //读取 posts 集合
+    db.collection('posts', function(err, collection) {
+      if (err) {
+        mongodb.close();
+        return callback(err);
+      }
+      var query = {
+        "$or":[
+          {"pv":{"$exists":false}},
+          {"tags":{"$exists":false}},
+          {"comments":{"$exists":false}}
+        ]
+      };
+      if (name) {
+        query.name = name;
+      }
+
+      // collection.update(query,{
+      //   $set: {
+      //     "pv": doc.pv || 0,
+      //     "tags": doc.tags || [],
+      //     "comments": doc.comments || []
+      //   }
+      // },false,true);
+
+      //根据 query 对象查询文章
+      collection.find(query).sort({
+        time: -1
+      }).toArray(function (err, docs) {
+        mongodb.close();
+        if (err) {
+          return callback(err);//失败！返回 err
+        }
+
+        var updateDocs = [];
+        //解析 markdown 为 html
+        docs.forEach(function (doc) {
+          doc.post = markdown.toHTML(doc.post);
+
+          //TODO:更新默认值到数据库里
+          //if( (doc.tags === undefined) || (doc.comments=== undefined) || (doc.pv === undefined) ){
+            // collection.update({
+            //   "_id": doc._id
+            // }, {
+            //   $set: {
+            //     "pv": doc.pv || 0,
+            //     "tags": doc.tags || [],
+            //     "comments": doc.comments || []
+            //   }
+            // }, function (err) {
+            //   mongodb.close();
+            //   if (err) {
+            //     return callback(err);
+            //   }
+            // });
+          //}
+        });
+        updateDocs.push(doc);
+        
+        
+        callback(null, updateDocs);//成功！以数组形式返回查询的结果
+      });
+
+      
+
+    });
+  });
+};
+
 //一次获取十篇文章
 Post.getByPage = function(name, page, callback) {
   //打开数据库
@@ -151,21 +229,36 @@ Post.getOne = function(name, day, title, callback) {
         return callback(err);
       }
       //根据用户名、发表日期及文章名进行查询
-      collection.findOne({
+      var query = {
         "name": name,
         "time.day": day,
         "title": title
-      }, function (err, doc) {
-        mongodb.close();
+      };
+      collection.findOne(query, function (err, doc) {
         if (err) {
+          mongodb.close();
           return callback(err);
         }
-        //解析 markdown 为 html
         //doc.post = markdown.toHTML(doc.post);
         if (doc) {
+          //每访问 1 次，pv 值增加 1
+          collection.update(query, {
+            $inc: {"pv": 1}
+          }, function (err) {
+            mongodb.close();
+            if (err) {
+              console.log(err)
+              return callback(err);
+            }
+          });
+
+          //解析 markdown 为 html
           doc.post = markdown.toHTML(doc.post);
           if(!doc.comments){
             doc.comments = [];
+          }
+          if(!doc.tags){
+            doc.tags = [];
           }
           doc.comments.forEach(function (comment) {
             comment.content = markdown.toHTML(comment.content);
@@ -175,6 +268,9 @@ Post.getOne = function(name, day, title, callback) {
 
         callback(null, doc);//返回查询的一篇文章
       });
+
+      
+
     });
   });
 };
@@ -201,6 +297,9 @@ Post.edit = function(name, day, title, callback) {
         mongodb.close();
         if (err) {
           return callback(err);
+        }
+        if(!doc.tags){
+          doc.tags = [];
         }
         callback(null, doc);//返回查询的一篇文章（markdown 格式）
       });

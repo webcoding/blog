@@ -1,6 +1,6 @@
 <%- include header %>
 <ul class="archive">
-<% var lastYear = 0 %>
+<% var lastYear = 0; %>
 <% posts.forEach(function (post, index) { %>
   <% if (lastYear != post.time.year) { %>
     <li><h3><%= post.time.year %></h3></li>

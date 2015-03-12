@@ -130,6 +130,23 @@ module.exports = function(app) {
     });
   });
 
+  app.get('/dealdata', checkLogin);
+  app.get('/dealdata', function (req, res) {
+    //查询并返回第 page 页的 5 篇文章
+    Post.dealData(null, function (err, posts) {
+      if (err) {
+        posts = [];
+      } 
+      res.render('archive', {
+        title: '更新的数据 共' + posts.length + '条',
+        posts: posts,
+        user: req.session.user,
+        success: req.flash('success').toString(),
+        error: req.flash('error').toString()
+      });
+    });
+  });
+
   app.get('/logout', checkLogin);
   app.get('/logout', function (req, res) {
     req.session.user = null;
@@ -160,7 +177,7 @@ module.exports = function(app) {
         return res.redirect('/');
       }
       res.render('archive', {
-        title: '存档',
+        title: '存档 共' + posts.length + '条',
         posts: posts,
         user: req.session.user,
         success: req.flash('success').toString(),
@@ -176,7 +193,7 @@ module.exports = function(app) {
         return res.redirect('/');
       }
       res.render('tags', {
-        title: '标签',
+        title: '标签 共' + posts.length + '个',
         posts: posts,
         user: req.session.user,
         success: req.flash('success').toString(),
@@ -233,7 +250,7 @@ module.exports = function(app) {
   app.get('/u/:name/:day/:title', function (req, res) {
     Post.getOne(req.params.name, req.params.day, req.params.title, function (err, post) {
       if (err) {
-        req.flash('error', err); 
+        req.flash('error', err);
         return res.redirect('/');
       }
       res.render('article', {
@@ -245,6 +262,7 @@ module.exports = function(app) {
       });
     });
   });
+
   app.post('/u/:name/:day/:title', function (req, res) {
     var date = new Date(),
         time = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + 
