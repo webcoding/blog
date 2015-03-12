@@ -1,5 +1,6 @@
 var mongodb = require('./db'),
-    markdown = require('markdown').markdown;
+    markdown = require('markdown').markdown,
+    ObjectID = require('mongodb').ObjectID;
 
 function Post(name, head, title, tags, post) {
   this.name = name;
@@ -208,7 +209,7 @@ Post.getByPage = function(name, page, callback) {
 };
 
 //获取一篇文章
-Post.getOne = function(name, day, title, callback) {
+Post.getOne = function(_id, callback) {
   //打开数据库
   mongodb.open(function (err, db) {
     if (err) {
@@ -222,9 +223,7 @@ Post.getOne = function(name, day, title, callback) {
       }
       //根据用户名、发表日期及文章名进行查询
       var query = {
-        "name": name,
-        "time.day": day,
-        "title": title
+        "_id": new ObjectID(_id)
       };
       collection.findOne(query, function (err, doc) {
         if (err) {

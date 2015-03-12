@@ -1,5 +1,5 @@
 <% posts.forEach(function (post, index) { %>
-  <div><h2><a href="/u/<%= post.name %>/<%= post.time.day %>/<%= post.title %>"><%= post.title %></a></h2><a href="/u/<%= post.name %>"><img src="<%= post.head || '/images/photo.jpg' %>" class="r_head" /></a></div>
+  <div><p><h2><a href="/p/<%= post._id %>"><%= post.title %></a></h2><a href="/u/<%= post.name %>"><img src="<%= post.head || '/images/photo.jpg' %>" class="r_head" /></a></div>
   <%- include userinfo %>
   <p><%- post.post %></p>
   <%- include tongji %>
