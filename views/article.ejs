@@ -1,19 +1,19 @@
 <%- include header %>
 <% if (user && (user.name == post.name)) { %>
 <p>
-    <span><a class="edit" href="/edit/<%= post.name %>/<%= post.time.day %>/<%= post.title %>">编辑</a></span>
-    <span><a class="edit" href="/remove/<%= post.name %>/<%= post.time.day %>/<%= post.title %>">删除</a></span>
+    <span><a class="edit" href="/edit/<%= post._id %>">编辑</a></span>
+    <span><a class="edit" href="/remove/<%= post._id %>">删除</a></span>
 </p>
 <% } %>
 
 <% var flag = 1 %>
-<% if (user && (user.name != post.name)) { %>
-  <% if ((post.reprint_info.reprint_from != undefined) && (user.name == post.reprint_info.reprint_from.name)) { %>
-    <% flag = 0 %>
+<% if (user && (user.name != post.name) ) { %>
+  <% if (post.reprint_info && (post.reprint_info.from_id == post._id) ) { %>
+    aa<% flag = 0 %>
   <% } %>
-  <% if ((post.reprint_info.reprint_to != undefined)) { %>
-    <% post.reprint_info.reprint_to.forEach(function (reprint_to, index) { %>
-      <% if (user.name == reprint_to.name) { %>
+  <% if (post.reprint_info && post.reprint_info.reprinted) { %>
+    <% post.reprint_info.reprinted.forEach(function (id, index) { %>
+      <% if (post._id == id) { %>
         <% flag = 0 %>
       <% } %>
     <% }) %>
@@ -21,10 +21,11 @@
 <% } else { %>
   <% flag = 0 %>
 <% } %>
-<% if (flag) { %>
-  <span><a class="edit" href="/reprint/<%= post.name %>/<%= post.time.day %>/<%= post.title %>">转载</a></span>
-<% } %>
 
+<% if (flag) { %>
+  <span><a class="edit" href="/reprint/<%= post._id %>">转载</a></span>
+<% } %>
+<p><%=user.name%>,<%=post.name%></p>
 <%- include userinfo %>
 <p><%- post.post %></p>
 
