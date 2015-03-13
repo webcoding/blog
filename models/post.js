@@ -37,6 +37,7 @@ Post.prototype.save = function(callback) {
       pv: 0
   };
   //打开数据库
+  /*
   mongodb.open(function (err, db) {
     if (err) {
       return callback(err);
@@ -58,6 +59,29 @@ Post.prototype.save = function(callback) {
         callback(null);//返回 err 为 null
       });
     });
+  });
+  */
+  async.waterfall([
+    function (cb) {
+      mongodb.open(function (err, db) {
+        cb(err, db);
+      });
+    },
+    function (db, cb) {
+      db.collection('posts', function (err, collection) {
+        cb(err, collection);
+      });
+    },
+    function (collection, cb) {
+      collection.insert(post, {
+        safe: true
+      }, function (err, user) {
+        cb(err, user);
+      });
+    }
+  ], function (err, user) {
+    mongodb.close();
+    callback(err, null);
   });
 };
 
@@ -165,7 +189,55 @@ Post.dealData = function(name, callback) {
 
 //一次获取十篇文章
 Post.getByPage = function(name, page, callback) {
+  var query = {};
+  async.waterfall([
+    function (cb) {
+      mongodb.open(function (err, db) {
+        cb(err, db);
+      });
+    },
+    function (db, cb) {
+      db.collection('posts', function (err, collection) {
+        cb(err, collection);
+      });
+    },
+    function (collection, cb) {
+      if (name) {
+        query.name = name;
+      }
+      collection.count(query, {
+        safe: true
+      }, function (err, total) {
+        console.log(total)
+        cb(err, total ,collection);
+      });
+    },
+    function (total, collection, cb){
+      //console.log(total)
+      collection.find(query, {
+        skip: (page - 1)*5,
+        limit: 5
+      }).sort({
+        time: -1
+      }).toArray(function (err, docs, total) {
+        cb(err, docs, total);
+      });
+    }
+  ], function (err, docs, total) {
+    mongodb.close();
+    docs.forEach(function (doc) {
+      if(!doc.tags){
+        doc.tags = [];
+      }
+      if(!doc.reprint_info){
+        doc.reprint_info = {};
+      }
+      doc.post = markdown.toHTML(doc.post);
+    });
+    callback(err, docs, total);
+  });
   //打开数据库
+  /*
   mongodb.open(function (err, db) {
     if (err) {
       return callback(err);
@@ -208,6 +280,7 @@ Post.getByPage = function(name, page, callback) {
       });
     });
   });
+  */
 };
 
 //获取一篇文章

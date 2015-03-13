@@ -1,5 +1,6 @@
 var mongodb = require('./db'),
-    crypto = require('crypto');
+    crypto = require('crypto'),
+    async = require('async');
 
 function User(user) {
   this.name = user.name;
@@ -23,6 +24,7 @@ User.prototype.save = function(callback) {
       head: head
   };
   //打开数据库
+  /*
   mongodb.open(function (err, db) {
     if (err) {
       return callback(err);//错误，返回 err 信息
@@ -45,11 +47,37 @@ User.prototype.save = function(callback) {
       });
     });
   });
+  */
+  //修改为异步流程控制函数
+  async.waterfall([
+    function (cb) {
+      mongodb.open(function (err, db) {
+        cb(err, db);
+      });
+    },
+    function (db, cb) {
+      db.collection('users', function (err, collection) {
+        cb(err, collection);
+      });
+    },
+    function (collection, cb) {
+      collection.insert(user, {
+        safe: true
+      }, function (err, user) {
+        cb(err, user);
+      });
+    }
+  ], function (err, user) {
+    mongodb.close();
+    callback(err, user[0]);
+  });
+
 };
 
 //读取用户信息
 User.get = function(name, callback) {
   //打开数据库
+  /*
   mongodb.open(function (err, db) {
     if (err) {
       return callback(err);//错误，返回 err 信息
@@ -72,4 +100,28 @@ User.get = function(name, callback) {
       });
     });
   });
+  */
+  async.waterfall([
+    function (cb) {
+      mongodb.open(function (err, db) {
+        cb(err, db);
+      });
+    },
+    function (db, cb) {
+      db.collection('users', function (err, collection) {
+        cb(err, collection);
+      });
+    },
+    function (collection, cb) {
+      collection.findOne({
+        name: name
+      }, function (err, user) {
+        cb(err, user);
+      });
+    }
+  ], function (err, user) {
+    mongodb.close();
+    callback(err, user);
+  });
+
 };
