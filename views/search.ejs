@@ -7,7 +7,7 @@
   <% lastYear = post.time.year } %>
     <li>
       <time><%= post.time.day %></time> 
-      <small><%= post.name %></small>
+      <small><a href="/u/<%= post.name %>"><%= post.name %></a></small>
       <a href="/p/<%= post._id %>"><%= post.title %></a>
     </li>
 <% }) %>
