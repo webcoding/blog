@@ -37,7 +37,7 @@ Post.prototype.save = function(callback) {
       pv: 0
   };
   //打开数据库
-  /*
+  //*
   mongodb.open(function (err, db) {
     if (err) {
       return callback(err);
@@ -60,29 +60,29 @@ Post.prototype.save = function(callback) {
       });
     });
   });
-  */
-  async.waterfall([
-    function (cb) {
-      mongodb.open(function (err, db) {
-        cb(err, db);
-      });
-    },
-    function (db, cb) {
-      db.collection('posts', function (err, collection) {
-        cb(err, collection);
-      });
-    },
-    function (collection, cb) {
-      collection.insert(post, {
-        safe: true
-      }, function (err, user) {
-        cb(err, user);
-      });
-    }
-  ], function (err, user) {
-    mongodb.close();
-    callback(err, null);
-  });
+  //*/
+  // async.waterfall([
+  //   function (cb) {
+  //     mongodb.open(function (err, db) {
+  //       cb(err, db);
+  //     });
+  //   },
+  //   function (db, cb) {
+  //     db.collection('posts', function (err, collection) {
+  //       cb(err, collection);
+  //     });
+  //   },
+  //   function (collection, cb) {
+  //     collection.insert(post, {
+  //       safe: true
+  //     }, function (err, user) {
+  //       cb(err, user);
+  //     });
+  //   }
+  // ], function (err, user) {
+  //   mongodb.close();
+  //   callback(err, null);
+  // });
 };
 
 //读取文章及其相关信息

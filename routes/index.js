@@ -1,7 +1,8 @@
 var crypto = require('crypto'),
     User = require('../models/user.js'),
     Post = require('../models/post.js'),
-    Comment = require('../models/comment.js');
+    Comment = require('../models/comment.js'),
+    passport = require('passport');
 
 var express = require('express');
 var router = express.Router();
@@ -103,6 +104,16 @@ module.exports = function(app) {
       req.flash('success', '登陆成功!');
       res.redirect('/');
     });
+  });
+
+  app.get("/login/github", passport.authenticate("github", {session: false}));
+  app.get("/login/github/callback", passport.authenticate("github", {
+    session: false,
+    failureRedirect: '/login',
+    successFlash: '登陆成功！'
+  }), function (req, res) {
+    req.session.user = {name: req.user.username, head: "https://gravatar.com/avatar/" + req.user._json.gravatar_id + "?s=48"};
+    res.redirect('/');
   });
 
   app.get('/post', checkLogin);
@@ -249,10 +260,10 @@ module.exports = function(app) {
   app.get('/u/:name', function (req, res) {
     //检查用户是否存在
     User.get(req.params.name, function (err, user) {
-      if (!user) {
-        req.flash('error', '用户不存在!'); 
-        return res.redirect('/');//用户不存在则跳转到主页
-      }
+      // if (!user) {
+      //   req.flash('error', '用户不存在!'); 
+      //   return res.redirect('/');//用户不存在则跳转到主页
+      // }
       //判断是否是第一页，并把请求的页数转换成 number 类型
       var page = req.query.p ? parseInt(req.query.p) : 1;
       //查询并返回该用户第 page 页的 5 篇文章
